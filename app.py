@@ -106,3 +106,39 @@ with c3:
     st.markdown(f'<div class="kpi-card"><p class="kpi-value kpi-events">{total_events:,}</p><p class="kpi-label">Total Events</p></div>', unsafe_allow_html=True)
 with c4:
     st.markdown(f'<div class="kpi-card"><p class="kpi-value kpi-damage">{fmt(total_damage)}</p><p class="kpi-label">Economic Damage (adj.)</p></div>', unsafe_allow_html=True)
+
+# ── Chart theme ───────────────────────────────────────────────────────────────
+CHART_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="DM Sans", color="#8b949e"),
+    title_font=dict(family="DM Sans", color="#e6edf3", size=14),
+    legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color="#8b949e")),
+    xaxis=dict(gridcolor="#21262d", zerolinecolor="#21262d", color="#8b949e"),
+    yaxis=dict(gridcolor="#21262d", zerolinecolor="#21262d", color="#8b949e"),
+    margin=dict(t=40, b=40, l=40, r=20),
+)
+
+# ── World Map ─────────────────────────────────────────────────────────────────
+st.markdown('<p class="section-header">Global Impact Map</p>', unsafe_allow_html=True)
+map_metric = st.radio("Colour map by:", ["Total Deaths", "Total Affected", "Total Events"], horizontal=True)
+map_data = (
+    filtered.groupby(["Country", "ISO"])[map_metric]
+    .sum().reset_index().dropna(subset=[map_metric])
+)
+fig_map = px.choropleth(
+    map_data, locations="ISO", color=map_metric,
+    hover_name="Country", color_continuous_scale="Reds",
+)
+fig_map.update_layout(
+    **CHART_LAYOUT,
+    geo=dict(
+        bgcolor="rgba(0,0,0,0)", showframe=False,
+        showcoastlines=True, coastlinecolor="#30363d",
+        showland=True, landcolor="#161b22",
+        showocean=True, oceancolor="#0d1117",
+        lakecolor="#0d1117", showcountries=True, countrycolor="#30363d",
+    ),
+    coloraxis_colorbar=dict(tickfont=dict(color="#8b949e"), title=dict(font=dict(color="#8b949e"))),
+    height=450,
+)
+st.plotly_chart(fig_map, use_container_width=True)
