@@ -142,3 +142,48 @@ fig_map.update_layout(
     height=450,
 )
 st.plotly_chart(fig_map, use_container_width=True)
+# ── Trends Over Time ──────────────────────────────────────────────────────────
+st.markdown('<p class="section-header">Trends Over Time</p>', unsafe_allow_html=True)
+
+col_l, col_r = st.columns(2)
+
+with col_l:
+    deaths_time = filtered.groupby("Year")["Total Deaths"].sum().reset_index()
+    fig_deaths = px.line(
+        deaths_time, x="Year", y="Total Deaths",
+        title="Deaths per Year",
+        markers=True,
+        color_discrete_sequence=["#f85149"],
+    )
+    fig_deaths.update_traces(line=dict(width=2.5), marker=dict(size=5))
+    fig_deaths.update_layout(**CHART_LAYOUT, height=320)
+    st.plotly_chart(fig_deaths, use_container_width=True)
+
+with col_r:
+    affected_time = (
+        filtered.groupby(["Year", "Disaster Type"])["Total Affected"]
+        .sum().reset_index()
+    )
+    fig_affected = px.area(
+        affected_time, x="Year", y="Total Affected",
+        color="Disaster Type",
+        title="People Affected by Disaster Type",
+        color_discrete_sequence=px.colors.qualitative.Bold,
+    )
+    fig_affected.update_layout(**CHART_LAYOUT, height=320)
+    st.plotly_chart(fig_affected, use_container_width=True)
+
+# ── Disaster Type Breakdown ───────────────────────────────────────────────────
+st.markdown('<p class="section-header">Disaster Type Breakdown</p>', unsafe_allow_html=True)
+col_a, col_b = st.columns(2)
+with col_a:
+    type_deaths = filtered.groupby("Disaster Type")["Total Deaths"].sum().reset_index().sort_values("Total Deaths", ascending=True)
+    fig_bar = px.bar(type_deaths, x="Total Deaths", y="Disaster Type", orientation="h", title="Total Deaths by Disaster Type", color="Total Deaths", color_continuous_scale="Reds")
+    fig_bar.update_layout(**CHART_LAYOUT, height=380, showlegend=False, coloraxis_showscale=False)
+    st.plotly_chart(fig_bar, use_container_width=True)
+with col_b:
+    subgroup_events = filtered.groupby("Disaster Subgroup")["Total Events"].sum().reset_index()
+    fig_pie = px.pie(subgroup_events, values="Total Events", names="Disaster Subgroup", title="Events by Disaster Subgroup", color_discrete_sequence=px.colors.qualitative.Bold, hole=0.45)
+    fig_pie.update_traces(textfont_color="#e6edf3")
+    fig_pie.update_layout(**CHART_LAYOUT, height=380)
+    st.plotly_chart(fig_pie, use_container_width=True)
