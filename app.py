@@ -187,3 +187,48 @@ with col_b:
     fig_pie.update_traces(textfont_color="#e6edf3")
     fig_pie.update_layout(**CHART_LAYOUT, height=380)
     st.plotly_chart(fig_pie, use_container_width=True)
+# ── Human vs Economic Cost ────────────────────────────────────────────────────
+st.markdown('<p class="section-header">Human vs Economic Cost</p>', unsafe_allow_html=True)
+col_x, col_y = st.columns(2)
+
+with col_x:
+    scatter_data = (
+        filtered.groupby("Country")[["Total Deaths", "Total Damage Adjusted", "Total Affected"]]
+        .sum().reset_index().dropna()
+    )
+    scatter_data = scatter_data[scatter_data["Total Deaths"] > 0]
+    fig_scatter = px.scatter(
+        scatter_data, x="Total Damage Adjusted", y="Total Deaths",
+        size="Total Affected", hover_name="Country",
+        title="Economic Damage vs Deaths (bubble = people affected)",
+        color="Total Deaths", color_continuous_scale="OrRd",
+        size_max=50, log_x=True, log_y=True,
+    )
+    fig_scatter.update_layout(**CHART_LAYOUT, height=380, coloraxis_showscale=False)
+    st.plotly_chart(fig_scatter, use_container_width=True)
+
+with col_y:
+    top10 = (
+        filtered.groupby("Country")["Total Affected"]
+        .sum().nlargest(10).reset_index()
+        .sort_values("Total Affected", ascending=True)
+    )
+    fig_top = px.bar(
+        top10, x="Total Affected", y="Country",
+        orientation="h", title="Top 10 Most Affected Countries",
+        color="Total Affected", color_continuous_scale="Blues",
+    )
+    fig_top.update_layout(**CHART_LAYOUT, height=380, showlegend=False, coloraxis_showscale=False)
+    st.plotly_chart(fig_top, use_container_width=True)
+
+# ── Data Explorer ─────────────────────────────────────────────────────────────
+st.markdown('<p class="section-header">Data Explorer</p>', unsafe_allow_html=True)
+with st.expander("📋 View filtered dataset"):
+    st.dataframe(
+        filtered.sort_values("Total Deaths", ascending=False).reset_index(drop=True),
+        use_container_width=True,
+        height=350,
+    )
+
+st.markdown("---")
+st.caption("Data: EM-DAT Country Profiles — Centre for Research on the Effect of Disasters (CRED) via HDX | Dashboard by Tyeshia Taylor|University of Westminster")
